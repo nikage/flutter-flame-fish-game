@@ -1,14 +1,19 @@
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
+import 'package:flame/parallax.dart';
 import 'package:flutter/material.dart';
 
 class FishGame extends FlameGame {
   late JoystickComponent joystick;
   late SpriteComponent? fish;
 
+  late ParallaxComponent parallaxComponent;
+  Vector2 parallaxOffset = Vector2.zero();
+
   @override
   Future<void> onLoad() async {
     super.onLoad();
+    await addParallaxBackground();
     addJoystick();
     await addFish();
   }
@@ -31,6 +36,18 @@ class FishGame extends FlameGame {
     add(fish!);
   }
 
+  Future<void> addParallaxBackground() async {
+    parallaxComponent = await loadParallaxComponent(
+      [
+        ParallaxImageData('waves.png'),
+      ],
+      repeat: ImageRepeat.repeatX,
+      baseVelocity: Vector2(0, 0), // Adjust the speed
+      velocityMultiplierDelta: Vector2(1, 1.0), // Adjust for depth effect
+    );
+    add(parallaxComponent);
+  }
+
   @override
   void render(Canvas canvas) {
     canvas.drawRect(
@@ -44,6 +61,18 @@ class FishGame extends FlameGame {
   @override
   void update(double dt) {
     super.update(dt);
-    fish?.position.add(joystick.relativeDelta * 200 * dt);
+    var delta = joystick.relativeDelta;
+    fish?.position.add(delta * 200 * dt);
+
+    if (delta.length > 0) {
+      parallaxOffset.add(delta * -1 * dt); // Adjust the multiplier as needed
+      updateParallaxOffset();
+    }
+  }
+
+  void updateParallaxOffset() {
+    for (ParallaxLayer layer in parallaxComponent.parallax!.layers) {
+      layer.currentOffset().setFrom(parallaxOffset);
+    }
   }
 }
