@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 
 class FishGame extends FlameGame {
   late JoystickComponent joystick;
-  late SpriteComponent? fish;
+  late SpriteAnimationComponent? fish;
 
   late ParallaxComponent parallaxComponent;
   Vector2 parallaxOffset = Vector2.zero();
   double elapsedTime = 0.0;
-  final double backgroundSpeed = -.1 / 4;
+  final double backgroundSpeed = -1 / 60;
 
   @override
   Future<void> onLoad() async {
@@ -33,10 +33,29 @@ class FishGame extends FlameGame {
   }
 
   addFish() async {
-    fish = SpriteComponent()
-      ..sprite = await loadSprite('back.png')
-      ..size = Vector2(55, 55)
-      ..position = size / 2;
+    final spriteSheet = await images.load('swim_to_left_sheet.png');
+    const spriteWidth = 256.0; // it's double so that we don't need to cast
+    final spriteSize = Vector2(spriteWidth, spriteWidth);
+    const animationFramesCount = 6;
+
+    final animation = SpriteAnimation.spriteList(
+      List.generate(
+        animationFramesCount,
+        (index) => Sprite(
+          spriteSheet,
+          srcPosition: Vector2(spriteWidth * index, 0),
+          srcSize: spriteSize,
+        ),
+      ),
+      stepTime: 0.1,
+    );
+
+    fish = SpriteAnimationComponent(
+      animation: animation,
+      size: spriteSize,
+      position: size / 2,
+    );
+
     add(fish!);
   }
 
