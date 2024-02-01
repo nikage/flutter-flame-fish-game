@@ -16,6 +16,8 @@ class FishGame extends FlameGame {
 
   bool _updateAnimationNeeded = false;
 
+  bool _isLoadingAnimation = false;
+
   @override
   Future<void> onLoad() async {
     super.onLoad();
@@ -41,6 +43,8 @@ class FishGame extends FlameGame {
   }
 
   Future<void> updateFishAnimation() async {
+    if (_isLoadingAnimation) return;
+    _isLoadingAnimation = true;
     final spriteSheet = await images.load(_getFishSprite());
     const spriteWidth = 256.0;
     final spriteSize = Vector2(spriteWidth, spriteWidth);
@@ -68,6 +72,7 @@ class FishGame extends FlameGame {
     } else {
       fish!.animation = newAnimation;
     }
+    _isLoadingAnimation = false;
   }
 
   var _fishSpriteFile = 'rest_to_left_sheet.png';
@@ -80,26 +85,34 @@ class FishGame extends FlameGame {
       case JoystickDirection.left:
         _fishDirection = CachedFishDirection.left;
         _fishSpriteFile = 'swim_to_left_sheet.png';
+        break;
       case JoystickDirection.right:
         _fishDirection = CachedFishDirection.right;
         _fishSpriteFile = 'swim_to_right_sheet.png';
+        break;
       case JoystickDirection.idle:
-        _fishDirection == CachedFishDirection.left
-            ? _fishSpriteFile = 'rest_to_left_sheet.png'
-            : _fishSpriteFile = 'rest_to_right_sheet.png';
-
+        _fishSpriteFile = _fishDirection == CachedFishDirection.left
+            ? 'rest_to_left_sheet.png'
+            : 'rest_to_right_sheet.png';
+        break;
       case JoystickDirection.upLeft:
         _fishDirection = CachedFishDirection.left;
         _fishSpriteFile = 'swim_to_left_sheet.png';
+        break;
       case JoystickDirection.upRight:
         _fishDirection = CachedFishDirection.right;
         _fishSpriteFile = 'swim_to_right_sheet.png';
+        break;
       case JoystickDirection.downRight:
         _fishDirection = CachedFishDirection.right;
         _fishSpriteFile = 'swim_to_right_sheet.png';
+        break;
       case JoystickDirection.downLeft:
         _fishDirection = CachedFishDirection.left;
         _fishSpriteFile = 'swim_to_left_sheet.png';
+        break;
+      default:
+        break;
     }
     return _fishSpriteFile;
   }
@@ -134,7 +147,8 @@ class FishGame extends FlameGame {
     updateParallaxOffset();
 
     final newDirection = getDirectionFromJoystick();
-    if (newDirection != _currentFishDirection) {
+    if (newDirection != _currentFishDirection ||
+        joystick.direction == JoystickDirection.idle) {
       _currentFishDirection = newDirection;
       _updateAnimationNeeded = true;
     }
