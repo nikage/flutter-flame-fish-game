@@ -9,6 +9,8 @@ class FishGame extends FlameGame {
 
   late ParallaxComponent parallaxComponent;
   Vector2 parallaxOffset = Vector2.zero();
+  double elapsedTime = 0.0;
+  final double backgroundSpeed = -.1 / 4;
 
   @override
   Future<void> onLoad() async {
@@ -22,7 +24,9 @@ class FishGame extends FlameGame {
     joystick = JoystickComponent(
       knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.blue),
       background: CircleComponent(
-          radius: 60, paint: Paint()..color = Colors.blue.withOpacity(0.5)),
+        radius: 60,
+        paint: Paint()..color = Colors.blue.withOpacity(0.5),
+      ),
       margin: const EdgeInsets.only(left: 40, bottom: 40),
     );
     add(joystick);
@@ -41,8 +45,8 @@ class FishGame extends FlameGame {
       [
         ParallaxImageData('background.png'),
       ],
-      baseVelocity: Vector2(0, 0), // Adjust the speed
-      velocityMultiplierDelta: Vector2(1, 1.0), // Adjust for depth effect
+      baseVelocity: Vector2(0, 0),
+      velocityMultiplierDelta: Vector2(1, 1.0),
     );
     add(parallaxComponent);
   }
@@ -60,19 +64,27 @@ class FishGame extends FlameGame {
   @override
   void update(double dt) {
     super.update(dt);
-    Vector2 delta = joystick.relativeDelta;
-    fish?.position.add(delta * 200 * dt);
 
-    if (delta.length > 0) {
-      parallaxOffset.add(Vector2(delta.x * -1 * dt, 0));
-      updateParallaxOffset();
+    elapsedTime += dt;
+    parallaxOffset.x = backgroundSpeed * dt;
+    updateParallaxOffset();
+
+    if (fish != null) {
+      Vector2 delta = joystick.relativeDelta;
+      var fishSpeed = 200.0;
+      Vector2 newPosition = fish!.position + delta * fishSpeed * dt;
+
+      newPosition.x = newPosition.x.clamp(0, size.x - fish!.width);
+      newPosition.y = newPosition.y.clamp(0, size.y - fish!.height);
+
+      fish!.position.setFrom(newPosition);
     }
   }
 
   void updateParallaxOffset() {
     for (ParallaxLayer layer in parallaxComponent.parallax!.layers) {
       Vector2 currentOffset = layer.currentOffset();
-      currentOffset.x = parallaxOffset.x;
+      currentOffset.x += parallaxOffset.x;
     }
   }
 }
