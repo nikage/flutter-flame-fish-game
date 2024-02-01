@@ -25,16 +25,25 @@ class FishGame extends FlameGame {
 
   addFish() async {
     fish = SpriteComponent()
-      ..sprite = await loadSprite('back.png') // Replace with your fish sprite
-      ..size = Vector2(55, 55) // Adjust the size as needed
-      ..position = size / 2; // Start in the middle of the screen
+      ..sprite = await loadSprite('back.png')
+      ..size = Vector2(55, 55)
+      ..position = size / 2;
     add(fish!);
+  }
+
+  @override
+  void render(Canvas canvas) {
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.x, size.y),
+      Paint()..color = Colors.cyan,
+    );
+
+    super.render(canvas);
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-    // Use the joystick's delta to move the fish
     fish?.position.add(joystick.relativeDelta * 200 * dt);
   }
 }
