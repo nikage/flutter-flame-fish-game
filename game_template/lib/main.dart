@@ -11,6 +11,7 @@
 
 import 'dart:developer' as dev;
 
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -153,10 +154,7 @@ class MyApp extends StatelessWidget {
                           .singleWhere((e) => e.number == levelNumber);
                       return buildMyTransition<void>(
                         key: ValueKey('level'),
-                        child: PlaySessionScreen(
-                          level,
-                          key: const Key('play session'),
-                        ),
+                        child: GameWidget(game: FishGame()),
                         color: context.watch<Palette>().backgroundPlaySession,
                       );
                     },

@@ -28,6 +28,7 @@ dependencies:
   games_services: ^4.0.0  # Achievements and leaderboards
   google_mobile_ads: ^4.0.0  # Ads
   in_app_purchase: ^3.0.1  # In-app purchases
+  flame: ^1.14.0
 
 dev_dependencies:
   flutter_lints: ^3.0.0
