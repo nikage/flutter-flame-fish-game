@@ -60,18 +60,19 @@ class FishGame extends FlameGame {
   @override
   void update(double dt) {
     super.update(dt);
-    var delta = joystick.relativeDelta;
+    Vector2 delta = joystick.relativeDelta;
     fish?.position.add(delta * 200 * dt);
 
     if (delta.length > 0) {
-      parallaxOffset.add(delta * -1 * dt);
+      parallaxOffset.add(Vector2(delta.x * -1 * dt, 0));
       updateParallaxOffset();
     }
   }
 
   void updateParallaxOffset() {
     for (ParallaxLayer layer in parallaxComponent.parallax!.layers) {
-      // layer.currentOffset().setFrom(parallaxOffset);
+      Vector2 currentOffset = layer.currentOffset();
+      currentOffset.x = parallaxOffset.x;
     }
   }
 }
