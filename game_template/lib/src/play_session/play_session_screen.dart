@@ -39,9 +39,8 @@ class FishGame extends FlameGame {
   Future<void> addParallaxBackground() async {
     parallaxComponent = await loadParallaxComponent(
       [
-        ParallaxImageData('waves.png'),
+        ParallaxImageData('background.png'),
       ],
-      repeat: ImageRepeat.repeatX,
       baseVelocity: Vector2(0, 0), // Adjust the speed
       velocityMultiplierDelta: Vector2(1, 1.0), // Adjust for depth effect
     );
@@ -65,14 +64,14 @@ class FishGame extends FlameGame {
     fish?.position.add(delta * 200 * dt);
 
     if (delta.length > 0) {
-      parallaxOffset.add(delta * -1 * dt); // Adjust the multiplier as needed
+      parallaxOffset.add(delta * -1 * dt);
       updateParallaxOffset();
     }
   }
 
   void updateParallaxOffset() {
     for (ParallaxLayer layer in parallaxComponent.parallax!.layers) {
-      layer.currentOffset().setFrom(parallaxOffset);
+      // layer.currentOffset().setFrom(parallaxOffset);
     }
   }
 }
