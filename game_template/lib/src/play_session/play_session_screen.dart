@@ -3,6 +3,8 @@ import 'package:flame/game.dart';
 import 'package:flame/parallax.dart';
 import 'package:flutter/material.dart';
 
+enum _CachedFishDirection { left, right }
+
 class FishGame extends FlameGame {
   late JoystickComponent joystick;
   SpriteAnimationComponent? fish;
@@ -12,19 +14,13 @@ class FishGame extends FlameGame {
   double elapsedTime = 0.0;
   final double backgroundSpeed = -1 / 60;
 
-  CachedFishDirection _currentFishDirection = CachedFishDirection.left;
+  _CachedFishDirection _fishDirection = _CachedFishDirection.left;
 
   bool _updateAnimationNeeded = false;
 
   bool _isLoadingAnimation = false;
 
-  @override
-  Future<void> onLoad() async {
-    super.onLoad();
-    await addParallaxBackground();
-    addJoystick();
-    await loadFishAnimation();
-  }
+  var _fishSpriteFile = 'rest_to_left_sheet.png';
 
   void addJoystick() {
     joystick = JoystickComponent(
@@ -38,8 +34,84 @@ class FishGame extends FlameGame {
     add(joystick);
   }
 
+  Future<void> addParallaxBackground() async {
+    parallaxComponent = await loadParallaxComponent(
+      [
+        ParallaxImageData('background.png'),
+      ],
+      baseVelocity: Vector2(0, 0),
+      velocityMultiplierDelta: Vector2(1, 1.0),
+    );
+    add(parallaxComponent);
+  }
+
+  _CachedFishDirection getDirectionFromJoystick() {
+    switch (joystick.direction) {
+      case JoystickDirection.left:
+      case JoystickDirection.upLeft:
+      case JoystickDirection.downLeft:
+        return _CachedFishDirection.left;
+      case JoystickDirection.right:
+      case JoystickDirection.upRight:
+      case JoystickDirection.downRight:
+        return _CachedFishDirection.right;
+      default:
+        return _fishDirection;
+    }
+  }
+
   Future<void> loadFishAnimation() async {
     await updateFishAnimation();
+  }
+
+  @override
+  Future<void> onLoad() async {
+    super.onLoad();
+    await addParallaxBackground();
+    addJoystick();
+    await loadFishAnimation();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.x, size.y),
+      Paint()..color = Colors.cyan,
+    );
+
+    super.render(canvas);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    elapsedTime += dt;
+    parallaxOffset.x = backgroundSpeed * dt;
+    updateParallaxOffset();
+
+    final newDirection = getDirectionFromJoystick();
+    if (newDirection != _fishDirection ||
+        joystick.direction == JoystickDirection.idle) {
+      _fishDirection = newDirection;
+      _updateAnimationNeeded = true;
+    }
+
+    if (_updateAnimationNeeded) {
+      _updateAnimationNeeded = false;
+      updateFishAnimation();
+    }
+
+    if (fish != null) {
+      Vector2 delta = joystick.relativeDelta;
+      var fishSpeed = 200.0;
+      Vector2 newPosition = fish!.position + delta * fishSpeed * dt;
+
+      newPosition.x = newPosition.x.clamp(0, size.x - fish!.width);
+      newPosition.y = newPosition.y.clamp(0, size.y - fish!.height);
+
+      fish!.position.setFrom(newPosition);
+    }
   }
 
   Future<void> updateFishAnimation() async {
@@ -75,40 +147,44 @@ class FishGame extends FlameGame {
     _isLoadingAnimation = false;
   }
 
-  var _fishSpriteFile = 'rest_to_left_sheet.png';
-  CachedFishDirection _fishDirection = CachedFishDirection.left;
+  void updateParallaxOffset() {
+    for (ParallaxLayer layer in parallaxComponent.parallax!.layers) {
+      Vector2 currentOffset = layer.currentOffset();
+      currentOffset.x += parallaxOffset.x;
+    }
+  }
 
   String _getFishSprite() {
     switch (joystick.direction) {
       case JoystickDirection.up:
       case JoystickDirection.down:
       case JoystickDirection.left:
-        _fishDirection = CachedFishDirection.left;
+        _fishDirection = _CachedFishDirection.left;
         _fishSpriteFile = 'swim_to_left_sheet.png';
         break;
       case JoystickDirection.right:
-        _fishDirection = CachedFishDirection.right;
+        _fishDirection = _CachedFishDirection.right;
         _fishSpriteFile = 'swim_to_right_sheet.png';
         break;
       case JoystickDirection.idle:
-        _fishSpriteFile = _fishDirection == CachedFishDirection.left
+        _fishSpriteFile = _fishDirection == _CachedFishDirection.left
             ? 'rest_to_left_sheet.png'
             : 'rest_to_right_sheet.png';
         break;
       case JoystickDirection.upLeft:
-        _fishDirection = CachedFishDirection.left;
+        _fishDirection = _CachedFishDirection.left;
         _fishSpriteFile = 'swim_to_left_sheet.png';
         break;
       case JoystickDirection.upRight:
-        _fishDirection = CachedFishDirection.right;
+        _fishDirection = _CachedFishDirection.right;
         _fishSpriteFile = 'swim_to_right_sheet.png';
         break;
       case JoystickDirection.downRight:
-        _fishDirection = CachedFishDirection.right;
+        _fishDirection = _CachedFishDirection.right;
         _fishSpriteFile = 'swim_to_right_sheet.png';
         break;
       case JoystickDirection.downLeft:
-        _fishDirection = CachedFishDirection.left;
+        _fishDirection = _CachedFishDirection.left;
         _fishSpriteFile = 'swim_to_left_sheet.png';
         break;
       default:
@@ -116,81 +192,4 @@ class FishGame extends FlameGame {
     }
     return _fishSpriteFile;
   }
-
-  Future<void> addParallaxBackground() async {
-    parallaxComponent = await loadParallaxComponent(
-      [
-        ParallaxImageData('background.png'),
-      ],
-      baseVelocity: Vector2(0, 0),
-      velocityMultiplierDelta: Vector2(1, 1.0),
-    );
-    add(parallaxComponent);
-  }
-
-  @override
-  void render(Canvas canvas) {
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.x, size.y),
-      Paint()..color = Colors.cyan,
-    );
-
-    super.render(canvas);
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-
-    elapsedTime += dt;
-    parallaxOffset.x = backgroundSpeed * dt;
-    updateParallaxOffset();
-
-    final newDirection = getDirectionFromJoystick();
-    if (newDirection != _currentFishDirection ||
-        joystick.direction == JoystickDirection.idle) {
-      _currentFishDirection = newDirection;
-      _updateAnimationNeeded = true;
-    }
-
-    if (_updateAnimationNeeded) {
-      _updateAnimationNeeded = false;
-      updateFishAnimation();
-    }
-
-    if (fish != null) {
-      Vector2 delta = joystick.relativeDelta;
-      var fishSpeed = 200.0;
-      Vector2 newPosition = fish!.position + delta * fishSpeed * dt;
-
-      newPosition.x = newPosition.x.clamp(0, size.x - fish!.width);
-      newPosition.y = newPosition.y.clamp(0, size.y - fish!.height);
-
-      fish!.position.setFrom(newPosition);
-    }
-  }
-
-  CachedFishDirection getDirectionFromJoystick() {
-    switch (joystick.direction) {
-      case JoystickDirection.left:
-      case JoystickDirection.upLeft:
-      case JoystickDirection.downLeft:
-        return CachedFishDirection.left;
-      case JoystickDirection.right:
-      case JoystickDirection.upRight:
-      case JoystickDirection.downRight:
-        return CachedFishDirection.right;
-      default:
-        return _currentFishDirection;
-    }
-  }
-
-  void updateParallaxOffset() {
-    for (ParallaxLayer layer in parallaxComponent.parallax!.layers) {
-      Vector2 currentOffset = layer.currentOffset();
-      currentOffset.x += parallaxOffset.x;
-    }
-  }
 }
-
-enum CachedFishDirection { left, right }
