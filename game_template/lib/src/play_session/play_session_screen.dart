@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 
 enum _CachedFishDirection { left, right }
 
+typedef FishAnimation = SpriteAnimationComponent?;
+
 class FishGame extends FlameGame {
   late JoystickComponent joystick;
-  SpriteAnimationComponent? fish;
+  FishAnimation fish;
 
   late ParallaxComponent parallaxComponent;
   Vector2 parallaxOffset = Vector2.zero();
@@ -104,19 +106,21 @@ class FishGame extends FlameGame {
 
     if (fish != null) {
       Vector2 delta = joystick.relativeDelta;
-      var fishSpeed = 200.0;
+      const fishSpeed = 200.0;
       Vector2 newPosition = fish!.position + delta * fishSpeed * dt;
 
       newPosition.x = newPosition.x.clamp(0, size.x - fish!.width);
       newPosition.y = newPosition.y.clamp(0, size.y - fish!.height);
 
       fish!.position.setFrom(newPosition);
+      fish?.rotateTowardsJoystick(joystick.direction);
     }
   }
 
   Future<void> updateFishAnimation() async {
     if (_isLoadingAnimation) return;
     _isLoadingAnimation = true;
+
     final spriteSheet = await images.load(_getFishSprite());
     const spriteWidth = 256.0;
     final spriteSize = Vector2(spriteWidth, spriteWidth);
@@ -144,6 +148,7 @@ class FishGame extends FlameGame {
     } else {
       fish!.animation = newAnimation;
     }
+
     _isLoadingAnimation = false;
   }
 
@@ -191,5 +196,23 @@ class FishGame extends FlameGame {
         break;
     }
     return _fishSpriteFile;
+  }
+}
+
+extension FishAnimationExtension on FishAnimation {
+  static double maxRotationAngle = 0.1;
+
+  void rotateTowardsJoystick(JoystickDirection direction) {
+    if (direction == JoystickDirection.up ||
+        direction == JoystickDirection.upLeft ||
+        direction == JoystickDirection.upRight) {
+      this?.angle = -maxRotationAngle; // Rotate upwards
+    } else if (direction == JoystickDirection.down ||
+        direction == JoystickDirection.downLeft ||
+        direction == JoystickDirection.downRight) {
+      this?.angle = maxRotationAngle; // Rotate downwards
+    } else {
+      this?.angle = 0; // No rotation
+    }
   }
 }
