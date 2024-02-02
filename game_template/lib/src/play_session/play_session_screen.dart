@@ -3,29 +3,22 @@ import 'package:flame/game.dart';
 import 'package:flame/parallax.dart';
 import 'package:flutter/material.dart';
 
-enum _CachedFishDirection { left, right }
-
 typedef FishAnimation = SpriteAnimationComponent?;
 
 class FishGame extends FlameGame {
-  late JoystickComponent joystick;
+  final _kBackgroundSpeed = -1 / 60;
+  late JoystickComponent _joystick;
+  late ParallaxComponent _backgroundParallax;
   FishAnimation fish;
-
-  late ParallaxComponent parallaxComponent;
-  Vector2 parallaxOffset = Vector2.zero();
-  double elapsedTime = 0.0;
-  final double backgroundSpeed = -1 / 60;
-
-  _CachedFishDirection _fishDirection = _CachedFishDirection.left;
-
-  bool _updateAnimationNeeded = false;
-
-  bool _isLoadingAnimation = false;
-
+  var _parallaxOffset = Vector2.zero();
+  var _elapsedTime = 0.0;
+  var _fishDirection = _CachedFishDirection.left;
+  var _updateAnimationNeeded = false;
+  var _isLoadingAnimation = false;
   var _fishSpriteFile = 'rest_to_left_sheet.png';
 
   void addJoystick() {
-    joystick = JoystickComponent(
+    _joystick = JoystickComponent(
       knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.blue),
       background: CircleComponent(
         radius: 60,
@@ -33,22 +26,22 @@ class FishGame extends FlameGame {
       ),
       margin: const EdgeInsets.only(left: 40, bottom: 40),
     );
-    add(joystick);
+    add(_joystick);
   }
 
   Future<void> addParallaxBackground() async {
-    parallaxComponent = await loadParallaxComponent(
+    _backgroundParallax = await loadParallaxComponent(
       [
         ParallaxImageData('background.png'),
       ],
       baseVelocity: Vector2(0, 0),
       velocityMultiplierDelta: Vector2(1, 1.0),
     );
-    add(parallaxComponent);
+    add(_backgroundParallax);
   }
 
   _CachedFishDirection getDirectionFromJoystick() {
-    switch (joystick.direction) {
+    switch (_joystick.direction) {
       case JoystickDirection.left:
       case JoystickDirection.upLeft:
       case JoystickDirection.downLeft:
@@ -88,13 +81,13 @@ class FishGame extends FlameGame {
   void update(double dt) {
     super.update(dt);
 
-    elapsedTime += dt;
-    parallaxOffset.x = backgroundSpeed * dt;
+    _elapsedTime += dt;
+    _parallaxOffset.x = _kBackgroundSpeed * dt;
     updateParallaxOffset();
 
     final newDirection = getDirectionFromJoystick();
     if (newDirection != _fishDirection ||
-        joystick.direction == JoystickDirection.idle) {
+        _joystick.direction == JoystickDirection.idle) {
       _fishDirection = newDirection;
       _updateAnimationNeeded = true;
     }
@@ -105,7 +98,7 @@ class FishGame extends FlameGame {
     }
 
     if (fish != null) {
-      Vector2 delta = joystick.relativeDelta;
+      Vector2 delta = _joystick.relativeDelta;
       const fishSpeed = 200.0;
       Vector2 newPosition = fish!.position + delta * fishSpeed * dt;
 
@@ -113,7 +106,7 @@ class FishGame extends FlameGame {
       newPosition.y = newPosition.y.clamp(0, size.y - fish!.height);
 
       fish!.position.setFrom(newPosition);
-      fish?.rotateTowardsJoystick(joystick.direction);
+      fish?.rotateTowardsJoystick(_joystick.direction);
     }
   }
 
@@ -153,14 +146,14 @@ class FishGame extends FlameGame {
   }
 
   void updateParallaxOffset() {
-    for (ParallaxLayer layer in parallaxComponent.parallax!.layers) {
+    for (ParallaxLayer layer in _backgroundParallax.parallax!.layers) {
       Vector2 currentOffset = layer.currentOffset();
-      currentOffset.x += parallaxOffset.x;
+      currentOffset.x += _parallaxOffset.x;
     }
   }
 
   String _getFishSprite() {
-    switch (joystick.direction) {
+    switch (_joystick.direction) {
       case JoystickDirection.up:
       case JoystickDirection.down:
       case JoystickDirection.left:
@@ -198,6 +191,8 @@ class FishGame extends FlameGame {
     return _fishSpriteFile;
   }
 }
+
+enum _CachedFishDirection { left, right }
 
 extension FishAnimationExtension on FishAnimation {
   static double maxRotationAngle = 0.1;
