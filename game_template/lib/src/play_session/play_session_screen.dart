@@ -66,15 +66,15 @@ class FishGame extends FlameGame {
     await loadFishAnimation();
   }
 
-  @override
-  void render(Canvas canvas) {
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.x, size.y),
-      Paint()..color = Colors.cyan,
-    );
-
-    super.render(canvas);
-  }
+  // @override
+  // void render(Canvas canvas) {
+  //   canvas.drawRect(
+  //     Rect.fromLTWH(0, 0, size.x, size.y),
+  //     Paint()..color = Colors.cyan,
+  //   );
+  //
+  //   super.render(canvas);
+  // }
 
   @override
   void update(double dt) {
@@ -113,17 +113,17 @@ class FishGame extends FlameGame {
     _isLoadingAnimation = true;
 
     final spriteSheet = await images.load(_getFishSprite());
-    const spriteWidth = 256.0;
-    final spriteSize = Vector2(spriteWidth, spriteWidth);
-    const animationFramesCount = 6;
+    const kSpriteWidth = 256.0;
+    final kSpriteSize = Vector2.all(kSpriteWidth);
+    const kAnimationFramesCount = 6;
 
     final newAnimation = SpriteAnimation.spriteList(
       List.generate(
-        animationFramesCount,
+        kAnimationFramesCount,
         (index) => Sprite(
           spriteSheet,
-          srcPosition: Vector2(spriteWidth * index, 0),
-          srcSize: spriteSize,
+          srcPosition: Vector2(kSpriteWidth * index, 0),
+          srcSize: kSpriteSize,
         ),
       ),
       stepTime: 0.1,
@@ -132,7 +132,7 @@ class FishGame extends FlameGame {
     if (fish == null) {
       fish = SpriteAnimationComponent(
         animation: newAnimation,
-        size: spriteSize,
+        size: kSpriteSize,
         position: size / 2,
       );
       await add(fish!);
