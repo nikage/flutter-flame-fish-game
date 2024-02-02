@@ -3,13 +3,13 @@ import 'package:flame/game.dart';
 import 'package:flame/parallax.dart';
 import 'package:flutter/material.dart';
 
-typedef FishAnimation = SpriteAnimationComponent?;
+// typedef FishAnimation = Fish?;
 
 class FishGame extends FlameGame {
   final _kBackgroundSpeed = -1 / 60;
   late JoystickComponent _joystick;
   late ParallaxComponent _backgroundParallax;
-  FishAnimation fish;
+  Fish? fish;
   var _parallaxOffset = Vector2.zero();
   var _fishDirection = _CachedFishDirection.left;
   var _updateAnimationNeeded = false;
@@ -66,16 +66,6 @@ class FishGame extends FlameGame {
     await loadFishAnimation();
   }
 
-  // @override
-  // void render(Canvas canvas) {
-  //   canvas.drawRect(
-  //     Rect.fromLTWH(0, 0, size.x, size.y),
-  //     Paint()..color = Colors.cyan,
-  //   );
-  //
-  //   super.render(canvas);
-  // }
-
   @override
   void update(double dt) {
     super.update(dt);
@@ -98,7 +88,7 @@ class FishGame extends FlameGame {
     if (fish != null) {
       Vector2 delta = _joystick.relativeDelta;
 
-      Vector2 newPosition = fish!.position + delta * fish.speed * dt;
+      Vector2 newPosition = fish!.position + delta * fish!.speed * dt;
 
       newPosition.x = newPosition.x.clamp(0, size.x - fish!.width);
       newPosition.y = newPosition.y.clamp(0, size.y - fish!.height);
@@ -130,10 +120,12 @@ class FishGame extends FlameGame {
     );
 
     if (fish == null) {
-      fish = SpriteAnimationComponent(
-        animation: newAnimation,
-        size: kSpriteSize,
-        position: size / 2,
+      fish = Fish.fromSpriteAnimations(
+        SpriteAnimationComponent(
+          animation: newAnimation,
+          size: kSpriteSize,
+          position: size / 2,
+        ),
       );
       await add(fish!);
     } else {
@@ -151,6 +143,7 @@ class FishGame extends FlameGame {
   }
 
   String _getFishSprite() {
+    // return 'swim_to_left_sheet.png';
     switch (_joystick.direction) {
       case JoystickDirection.up:
       case JoystickDirection.down:
@@ -192,7 +185,11 @@ class FishGame extends FlameGame {
 
 enum _CachedFishDirection { left, right }
 
-extension FishAnimationExtension on FishAnimation {
+class Fish extends SpriteAnimationComponent {
+  Fish.fromSpriteAnimations(SpriteAnimationComponent animation) {
+    this.animation = animation.animation;
+  }
+
   static double maxRotationAngle = 0.1;
 
   get speed => 200.0;
@@ -201,13 +198,13 @@ extension FishAnimationExtension on FishAnimation {
     if (direction == JoystickDirection.up ||
         direction == JoystickDirection.upLeft ||
         direction == JoystickDirection.upRight) {
-      this?.angle = -maxRotationAngle; // Rotate upwards
+      angle = -maxRotationAngle; // Rotate upwards
     } else if (direction == JoystickDirection.down ||
         direction == JoystickDirection.downLeft ||
         direction == JoystickDirection.downRight) {
-      this?.angle = maxRotationAngle; // Rotate downwards
+      angle = maxRotationAngle; // Rotate downwards
     } else {
-      this?.angle = 0; // No rotation
+      angle = 0; // No rotation
     }
   }
 }
