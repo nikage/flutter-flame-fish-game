@@ -8,11 +8,11 @@ class FishGame extends FlameGame {
   final _parallaxOffset = Vector2.zero();
   late JoystickComponent _joystick;
   late ParallaxComponent _backgroundParallax;
-  Fish? fish;
   var _idleFishDirection = _IdleFishDirection.left;
   var _updateAnimationNeeded = false;
   var _isLoadingAnimation = false;
-  var _fishSpriteFile = 'rest_to_left_sheet.png';
+  var _wasIdleLastFrame = true;
+  Fish? fish;
 
   void addJoystick() {
     _joystick = JoystickComponent(
@@ -71,21 +71,25 @@ class FishGame extends FlameGame {
     _parallaxOffset.x = _kBackgroundSpeed * dt;
     _updateParallaxOffset();
 
-    final newIdleDirection = _getDirectionFromJoystick();
-    bool directionChanged = newIdleDirection != _idleFishDirection;
+    final newDirection = _getDirectionFromJoystick();
     bool isFishIdle = _joystick.direction == JoystickDirection.idle;
+    bool directionChanged = newDirection != _idleFishDirection;
+    bool idleTransition = isFishIdle && !_wasIdleLastFrame;
 
-    if (directionChanged ||
-        (isFishIdle && _idleFishDirection != _IdleFishDirection.restRight)) {
-      _idleFishDirection =
-          isFishIdle ? _IdleFishDirection.restRight : newIdleDirection;
+    // Update the animation when the direction changes or when transitioning to idle
+    if (directionChanged || idleTransition) {
+      _idleFishDirection = isFishIdle ? _idleFishDirection : newDirection;
       _updateAnimationNeeded = true;
+      _wasIdleLastFrame = isFishIdle;
+    } else if (!isFishIdle) {
+      _wasIdleLastFrame = false;
     }
 
     if (_updateAnimationNeeded) {
       _updateAnimationNeeded = false;
       _updateFishAnimation();
     }
+
     if (fish != null) {
       Vector2 delta = _joystick.relativeDelta;
 
@@ -138,57 +142,30 @@ class FishGame extends FlameGame {
 
   void _updateParallaxOffset() {
     for (ParallaxLayer layer in _backgroundParallax.parallax!.layers) {
-      Vector2 currentOffset = layer.currentOffset();
+      var currentOffset = layer.currentOffset();
       currentOffset.x += _parallaxOffset.x;
     }
   }
 
   String _getFishSprite() {
-    // return 'swim_to_left_sheet.png';
     switch (_joystick.direction) {
-      case JoystickDirection.up:
-      case JoystickDirection.down:
-       break;
       case JoystickDirection.left:
-        _idleFishDirection = _IdleFishDirection.left;
-        _fishSpriteFile = 'swim_to_left_sheet.png';
-        break;
-      case JoystickDirection.right:
-        _idleFishDirection = _IdleFishDirection.right;
-        _fishSpriteFile = 'swim_to_right_sheet.png';
-        break;
-      case JoystickDirection.idle:
-        _fishSpriteFile = switch (_idleFishDirection) {
-          _IdleFishDirection.left => 'rest_to_left_sheet.png',
-          _IdleFishDirection.right => 'rest_to_right_sheet.png',
-          _IdleFishDirection.restRight => 'rest_to_right_sheet.png',
-          _IdleFishDirection.restLeft => 'rest_to_left_sheet.png',
-        };
-        break;
       case JoystickDirection.upLeft:
-        _idleFishDirection = _IdleFishDirection.left;
-        _fishSpriteFile = 'swim_to_left_sheet.png';
-        break;
-      case JoystickDirection.upRight:
-        _idleFishDirection = _IdleFishDirection.right;
-        _fishSpriteFile = 'swim_to_right_sheet.png';
-        break;
-      case JoystickDirection.downRight:
-        _idleFishDirection = _IdleFishDirection.right;
-        _fishSpriteFile = 'swim_to_right_sheet.png';
-        break;
       case JoystickDirection.downLeft:
-        _idleFishDirection = _IdleFishDirection.left;
-        _fishSpriteFile = 'swim_to_left_sheet.png';
-        break;
+        return 'swim_to_left_sheet.png';
+      case JoystickDirection.right:
+      case JoystickDirection.upRight:
+      case JoystickDirection.downRight:
+        return 'swim_to_right_sheet.png';
       default:
-        break;
+        return _idleFishDirection == _IdleFishDirection.left
+            ? 'rest_to_left_sheet.png'
+            : 'rest_to_right_sheet.png';
     }
-    return _fishSpriteFile;
   }
 }
 
-enum _IdleFishDirection { left, right, restRight, restLeft }
+enum _IdleFishDirection { left, right }
 
 class Fish extends SpriteAnimationComponent {
   Fish.fromSpriteAnimations(SpriteAnimationComponent animation) {
