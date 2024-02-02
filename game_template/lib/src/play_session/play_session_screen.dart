@@ -53,7 +53,7 @@ class FishGame extends FlameGame {
   }
 
   Future<void> loadFishAnimation() async {
-    await updateFishAnimation();
+    await _updateFishAnimation();
   }
 
   @override
@@ -72,17 +72,19 @@ class FishGame extends FlameGame {
     _updateParallaxOffset();
 
     final newDirection = getDirectionFromJoystick();
-    if (newDirection != _fishDirection ||
-        _joystick.direction == JoystickDirection.idle) {
-      _fishDirection = newDirection;
+    bool directionChanged = newDirection != _fishDirection;
+    bool isIdle = _joystick.direction == JoystickDirection.idle;
+
+    if (directionChanged ||
+        (isIdle && _fishDirection != _CachedFishDirection.idle)) {
+      _fishDirection = isIdle ? _CachedFishDirection.idle : newDirection;
       _updateAnimationNeeded = true;
     }
 
     if (_updateAnimationNeeded) {
       _updateAnimationNeeded = false;
-      updateFishAnimation();
+      _updateFishAnimation();
     }
-
     if (fish != null) {
       Vector2 delta = _joystick.relativeDelta;
 
@@ -96,7 +98,7 @@ class FishGame extends FlameGame {
     }
   }
 
-  Future<void> updateFishAnimation() async {
+  _updateFishAnimation() async {
     if (_isLoadingAnimation) return;
     _isLoadingAnimation = true;
 
@@ -181,7 +183,7 @@ class FishGame extends FlameGame {
   }
 }
 
-enum _CachedFishDirection { left, right }
+enum _CachedFishDirection { left, right, idle }
 
 class Fish extends SpriteAnimationComponent {
   Fish.fromSpriteAnimations(SpriteAnimationComponent animation) {
