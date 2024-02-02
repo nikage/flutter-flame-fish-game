@@ -99,13 +99,18 @@ class FishGame extends FlameGame {
   }
 
   void _addJoystick() {
+    const joystickRadius = 60;
+    var screenWidth = size.x;
     _joystick = JoystickComponent(
       knob: CircleComponent(radius: 30, paint: Paint()..color = Colors.blue),
       background: CircleComponent(
-        radius: 60,
+        radius: joystickRadius.toDouble(),
         paint: Paint()..color = Colors.blue.withOpacity(0.4),
       ),
-      margin: const EdgeInsets.only(left: 40, bottom: 40),
+      margin: EdgeInsets.only(
+        left: (screenWidth / 2) - joystickRadius,
+        bottom: 40,
+      ),
     );
     add(_joystick);
   }
