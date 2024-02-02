@@ -11,7 +11,6 @@ class FishGame extends FlameGame {
   late ParallaxComponent _backgroundParallax;
   FishAnimation fish;
   var _parallaxOffset = Vector2.zero();
-  var _elapsedTime = 0.0;
   var _fishDirection = _CachedFishDirection.left;
   var _updateAnimationNeeded = false;
   var _isLoadingAnimation = false;
@@ -81,9 +80,8 @@ class FishGame extends FlameGame {
   void update(double dt) {
     super.update(dt);
 
-    _elapsedTime += dt;
     _parallaxOffset.x = _kBackgroundSpeed * dt;
-    updateParallaxOffset();
+    _updateParallaxOffset();
 
     final newDirection = getDirectionFromJoystick();
     if (newDirection != _fishDirection ||
@@ -99,8 +97,8 @@ class FishGame extends FlameGame {
 
     if (fish != null) {
       Vector2 delta = _joystick.relativeDelta;
-      const fishSpeed = 200.0;
-      Vector2 newPosition = fish!.position + delta * fishSpeed * dt;
+
+      Vector2 newPosition = fish!.position + delta * fish.speed * dt;
 
       newPosition.x = newPosition.x.clamp(0, size.x - fish!.width);
       newPosition.y = newPosition.y.clamp(0, size.y - fish!.height);
@@ -145,7 +143,7 @@ class FishGame extends FlameGame {
     _isLoadingAnimation = false;
   }
 
-  void updateParallaxOffset() {
+  void _updateParallaxOffset() {
     for (ParallaxLayer layer in _backgroundParallax.parallax!.layers) {
       Vector2 currentOffset = layer.currentOffset();
       currentOffset.x += _parallaxOffset.x;
@@ -196,6 +194,8 @@ enum _CachedFishDirection { left, right }
 
 extension FishAnimationExtension on FishAnimation {
   static double maxRotationAngle = 0.1;
+
+  get speed => 200.0;
 
   void rotateTowardsJoystick(JoystickDirection direction) {
     if (direction == JoystickDirection.up ||
