@@ -3,8 +3,6 @@ import 'package:flame/game.dart';
 import 'package:flame/parallax.dart';
 import 'package:flutter/material.dart';
 
-// typedef FishAnimation = Fish?;
-
 class FishGame extends FlameGame {
   final _kBackgroundSpeed = -1 / 60;
   late JoystickComponent _joystick;
@@ -190,19 +188,19 @@ class Fish extends SpriteAnimationComponent {
     this.animation = animation.animation;
   }
 
-  static double maxRotationAngle = 0.1;
+  static const double _maxRotationAngle = 0.1;
 
-  get speed => 200.0;
+  final speed = 200.0;
 
   void rotateTowardsJoystick(JoystickDirection direction) {
     if (direction == JoystickDirection.up ||
         direction == JoystickDirection.upLeft ||
         direction == JoystickDirection.upRight) {
-      angle = -maxRotationAngle; // Rotate upwards
+      angle = -_maxRotationAngle; // Rotate upwards
     } else if (direction == JoystickDirection.down ||
         direction == JoystickDirection.downLeft ||
         direction == JoystickDirection.downRight) {
-      angle = maxRotationAngle; // Rotate downwards
+      angle = _maxRotationAngle; // Rotate downwards
     } else {
       angle = 0; // No rotation
     }
